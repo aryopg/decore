@@ -5,7 +5,7 @@ name: ActivationDecoding
 method: ActivationDecoding
 configs:
   post_softmax: True
-  dola_layers: high
+  dola_layers: null
   alpha: 0.5
   decoding_strategy: entropy
   decoding_mode: activation

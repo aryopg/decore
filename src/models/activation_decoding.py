@@ -39,6 +39,8 @@ class ActivationDecoding(BaseModel):
             self.candidate_premature_layers = list(
                 range(mid_point, self.num_layers, 2)
             ) + [self.num_layers]
+        else:
+            self.candidate_premature_layers = [self.num_layers]
 
         self.mature_layer = self.candidate_premature_layers[-1]
 
