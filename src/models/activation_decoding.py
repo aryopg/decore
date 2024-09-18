@@ -74,6 +74,7 @@ class ActivationDecoding(BaseModel):
             input_logits = self.model(
                 input_ids=tokenised_inputs[:, :-1], use_cache=True, return_dict=True
             )
+            before = ()
             generated_ids = []
             entropies = []
             last_input_token = tokenised_inputs[:, -1]
