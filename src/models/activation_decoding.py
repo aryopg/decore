@@ -127,7 +127,7 @@ class ActivationDecoding(BaseModel):
 
                     adjust_score = -entropy
 
-                entropies += [adjust_score]
+                entropies += [adjust_score.item()]
                 past_kv = outputs.past_key_values
                 last_input_token = logits[0, -1].argmax()
                 generated_ids.append(last_input_token.item())
