@@ -132,9 +132,13 @@ class ActivationDecoding(BaseModel):
                     ).unsqueeze(
                         0
                     )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [1, 250, 32000]
+                    print("info_layer_probs: ", info_layer_probs)
+                    print("info_layer_probs.shape: ", info_layer_probs.shape)
                     entropy = torch.distributions.Categorical(
                         probs=info_layer_probs, validate_args=False
                     ).entropy()  # [1,32000]
+                    print("entropy: ", entropy)
+                    print("entropy.shape: ", entropy.shape)
                 elif len(before) >= 1:
                     info_layer_score = before[
                         0
@@ -157,9 +161,11 @@ class ActivationDecoding(BaseModel):
 
                     adjust_score = -final_entropy
 
+                next_token_logits = logits[0, -1].log_softmax(dim=-1)
+
                 entropies += [adjust_score[0][0].item()]
                 past_kv = outputs.past_key_values
-                last_input_token = logits[0, -1].argmax()
+                last_input_token = next_token_logits.argmax(dim=-1)
                 generated_ids.append(last_input_token.item())
                 if last_input_token.item() == self.tokenizer.eos_token_id:
                     break
