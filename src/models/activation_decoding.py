@@ -128,11 +128,15 @@ class ActivationDecoding(BaseModel):
                 )
 
                 final_logits = dict_outputs[self.mature_layer][:, -1, :]
-                final_logits = final_logits.log_softmax(dim=-1)
-                mask = final_logits[0] < -1e3
-                index_nontop = torch.argwhere(mask).squeeze()
+                if self.relative_top > 0.0:
+                    final_logits = self.relative_top_filter(
+                        final_logits, self.relative_top
+                    )
+                    mask = final_logits[0] < -1e3
+                    index_nontop = torch.argwhere(mask).squeeze()
 
                 logits = final_logits
+                print("logits: ", logits)
                 if len(before) == 0:  # the token is the first generated token
                     info_layer_score = dict_outputs[self.info_layer][
                         -1, :, :
