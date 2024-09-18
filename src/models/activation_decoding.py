@@ -186,7 +186,7 @@ class ActivationDecoding(BaseModel):
                 print("last_input_token: ", last_input_token)
                 generated_ids.append(last_input_token.item())
                 input_ids = torch.cat(
-                    [input_ids, last_input_token.unsqueeze(0).unsqueeze(0)], dim=1
+                    [input_ids, last_input_token.unsqueeze(0)], dim=1
                 )
                 if last_input_token.item() == self.tokenizer.eos_token_id:
                     break
