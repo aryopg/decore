@@ -125,6 +125,8 @@ class ActivationDecoding(BaseModel):
                         -1, :, :
                     ]  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
                     before = (info_layer_score,)
+                    print("info_layer_score: ", info_layer_score)
+                    print("info_layer_score.shape: ", info_layer_score.shape)
 
                     # compute entropy of the info layer
                     info_layer_probs = F.softmax(
