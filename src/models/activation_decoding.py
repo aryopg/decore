@@ -4,13 +4,12 @@ import torch
 from torch.nn import functional as F
 
 from src.configs import DecoderConfigs, ModelConfigs
-from src.models.base_model import BaseModel
 
 # Transformers submodule taken from https://github.com/hkust-nlp/Activation_Decoding
 from transformers_ad.src.transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-class ActivationDecoding(BaseModel):
+class ActivationDecoding:
     def __init__(
         self,
         model_configs: ModelConfigs,
@@ -57,6 +56,99 @@ class ActivationDecoding(BaseModel):
         self.decoding_strategy = self.decoder_configs.configs.decoding_strategy
         self.decoding_mode = self.decoder_configs.configs.decoding_mode
         self.info_layer = self.decoder_configs.configs.info_layer
+
+    def _verbalise_input(
+        self,
+        inputs: Union[list, str],
+        tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast, None] = None,
+        use_system_prompt: bool = True,
+        add_generation_prompt: bool = True,
+        use_chat_template: bool = True,
+    ) -> torch.Tensor:
+        if tokenizer is None:
+            tokenizer = self.tokenizer
+
+        if self.model_configs.model_type == "instruct":
+            if use_chat_template:
+                chat_inputs = []
+                if type(inputs) == list:
+                    if "mistral" in self.model_configs.name.lower():
+                        if use_system_prompt:
+                            system_prompt = inputs[0]
+                            if type(system_prompt) in [tuple, list]:
+                                system_prompt = system_prompt[0]
+                            system_prompt = system_prompt + "\n"
+                            inputs = inputs[1:]
+                        else:
+                            system_prompt = ""
+                    for idx, input in enumerate(inputs):
+                        if type(input) in [tuple, list]:
+                            input = input[0]
+                        # Mistral can't handle system prompt
+                        if (
+                            use_system_prompt
+                            and "mistral" not in self.model_configs.name.lower()
+                        ):
+                            if idx == 0:
+                                chat_inputs += [{"role": "system", "content": input}]
+                            else:
+                                if idx % 2 != 0:
+                                    chat_inputs += [{"role": "user", "content": input}]
+                                else:
+                                    chat_inputs += [
+                                        {"role": "assistant", "content": input}
+                                    ]
+                        else:
+                            # Mistral can't handle system prompt
+                            if "mistral" in self.model_configs.name.lower():
+                                if idx % 2 == 0:
+                                    chat_inputs += [
+                                        {
+                                            "role": "user",
+                                            "content": system_prompt + input,
+                                        }
+                                    ]
+                                else:
+                                    chat_inputs += [
+                                        {"role": "assistant", "content": input}
+                                    ]
+                            else:
+                                if idx % 2 == 0:
+                                    chat_inputs += [{"role": "user", "content": input}]
+                                else:
+                                    chat_inputs += [
+                                        {"role": "assistant", "content": input}
+                                    ]
+                else:
+                    if type(inputs) in [tuple, list]:
+                        inputs = inputs[0]
+                    chat_inputs += [{"role": "user", "content": inputs}]
+                inputs = tokenizer.apply_chat_template(
+                    chat_inputs,
+                    add_generation_prompt=add_generation_prompt,
+                    return_tensors="pt",
+                    max_length=self.max_seq_len,
+                )
+            else:
+                if type(inputs) in [tuple, list]:
+                    inputs = inputs[0]
+                inputs = tokenizer(
+                    inputs, return_tensors="pt", max_length=self.max_seq_len
+                ).input_ids
+
+        elif self.model_configs.model_type == "base":
+            inputs = tokenizer(
+                inputs,
+                return_tensors="pt",
+                max_length=self.max_seq_len,
+            ).input_ids
+        else:
+            raise ValueError(
+                f"Unknown model type: {self.model_configs.model_type}. "
+                "Terminate tokenisation process."
+            )
+
+        return inputs
 
     def _calculate_entropy(self, logits):
         probs = torch.softmax(logits, dim=-1)
