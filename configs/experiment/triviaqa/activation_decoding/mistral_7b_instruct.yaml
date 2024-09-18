@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: mistral_7b_instruct
+  - override /data: triviaqa
+  - override /decoder: activation_decoding

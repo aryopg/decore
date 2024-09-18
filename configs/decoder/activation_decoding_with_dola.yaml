@@ -1,0 +1,12 @@
+defaults:
+  - base_decoder_config
+
+name: ActivationDecodingWithDoLa
+method: ActivationDecoding
+configs:
+  post_softmax: True
+  dola_layers: high
+  alpha: 0.5
+  decoding_strategy: entropy
+  decoding_mode: activation_dola
+  info_layer: 24

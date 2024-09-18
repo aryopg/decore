@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: llama3_70b_instruct
+  - override /data: popqa
+  - override /decoder: activation_decoding

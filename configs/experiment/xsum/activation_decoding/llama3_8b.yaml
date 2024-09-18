@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: llama3_8b
+  - override /data: xsum
+  - override /decoder: activation_decoding
+
+model:
+  configs:
+    max_new_tokens: 128

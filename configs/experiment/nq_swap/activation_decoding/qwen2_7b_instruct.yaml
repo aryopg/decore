@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /model: qwen2_7b_instruct
+  - override /data: nq_swap
+  - override /decoder: activation_decoding
+

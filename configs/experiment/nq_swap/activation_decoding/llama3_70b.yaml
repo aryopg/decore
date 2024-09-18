@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: llama3_70b
+  - override /data: nq_swap
+  - override /decoder: activation_decoding

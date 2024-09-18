@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: llama3_8b
+  - override /data: triviaqa
+  - override /decoder: activation_decoding

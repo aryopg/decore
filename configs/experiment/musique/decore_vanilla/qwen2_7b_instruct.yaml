@@ -6,4 +6,4 @@ defaults:
 
 model:
   configs:
-    max_new_tokens: 64
+    max_new_tokens: 100
