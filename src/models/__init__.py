@@ -7,3 +7,4 @@ from .decore_entropy import DeCoReEntropy
 from .decore_entropy_gain import DeCoReEntropyGain
 from .dola import DoLa
 from .decore_random_entropy import DeCoReRandomEntropy
+from .activation_decoding import ActivationDecoding
