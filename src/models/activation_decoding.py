@@ -140,9 +140,7 @@ class ActivationDecoding(BaseModel):
                 if len(before) == 0:  # the token is the first generated token
                     info_layer_score = dict_outputs[self.info_layer][
                         -1, :, :
-                    ].log_softmax(
-                        dim=-1
-                    )  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
+                    ]  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
                     before = (info_layer_score,)
                     print("info_layer_score: ", info_layer_score)
                     print("info_layer_score.shape: ", info_layer_score.shape)
