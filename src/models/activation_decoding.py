@@ -116,6 +116,8 @@ class ActivationDecoding(BaseModel):
                 # we compute the adjust_score to calibrate the original score
                 adjust_score = None
 
+                print("logits: ", logits)
+                print("entropy: ", entropy)
                 if (
                     self.decoding_strategy == "entropy"
                     or self.decoding_mode == "activation_dola"
@@ -126,6 +128,7 @@ class ActivationDecoding(BaseModel):
                         logits = logits
 
                     adjust_score = -entropy
+                print("logits: ", logits)
 
                 entropies += [adjust_score.item()]
                 past_kv = outputs.past_key_values
