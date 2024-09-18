@@ -118,7 +118,7 @@ class ActivationDecoding(BaseModel):
             for _ in range(self.max_new_tokens):
                 last_input_token = last_input_token.view(1, 1)
                 dict_outputs, outputs = self.model(
-                    input_ids=tokenised_inputs,
+                    input_ids=last_input_token,
                     past_key_values=past_kv,
                     return_dict=True,
                     output_attentions=False,
