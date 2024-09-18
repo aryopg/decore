@@ -107,19 +107,14 @@ class ActivationDecoding(BaseModel):
 
         # Predict
         with torch.inference_mode():
-            input_logits = self.model(
-                input_ids=tokenised_inputs[:, :-1], use_cache=True, return_dict=True
-            )
             before = ()
             generated_ids = []
             entropies = []
-            last_input_token = tokenised_inputs[:, -1]
-            past_kv = input_logits.past_key_values
+
+            input_ids = tokenised_inputs.clone()
             for _ in range(self.max_new_tokens):
-                last_input_token = last_input_token.view(1, 1)
                 dict_outputs, outputs = self.model(
-                    input_ids=last_input_token,
-                    past_key_values=past_kv,
+                    input_ids=input_ids,
                     return_dict=True,
                     output_attentions=False,
                     output_hidden_states=False,
@@ -187,10 +182,12 @@ class ActivationDecoding(BaseModel):
                 print("next_token_logits.shape: ", next_token_logits.shape)
 
                 entropies += [adjust_score[0][0].item()]
-                past_kv = outputs.past_key_values
                 last_input_token = next_token_logits.argmax(dim=-1)
                 print("last_input_token: ", last_input_token)
                 generated_ids.append(last_input_token.item())
+                input_ids = torch.cat(
+                    [input_ids, last_input_token.unsqueeze(0).unsqueeze(0)], dim=1
+                )
                 if last_input_token.item() == self.tokenizer.eos_token_id:
                     break
             decoded_text = self.tokenizer.decode(
