@@ -6,7 +6,12 @@ from torch.nn import functional as F
 from src.configs import DecoderConfigs, ModelConfigs
 
 # Transformers submodule taken from https://github.com/hkust-nlp/Activation_Decoding
-from transformers_ad.src.transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers_ad.src.transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+    PreTrainedTokenizerFast,
+)
 
 
 class ActivationDecoding:
