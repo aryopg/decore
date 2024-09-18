@@ -131,14 +131,11 @@ class ActivationDecoding(BaseModel):
                     index_nontop = torch.argwhere(mask).squeeze()
 
                 logits = final_logits
-                print("logits: ", logits)
                 if len(before) == 0:  # the token is the first generated token
                     info_layer_score = dict_outputs[self.info_layer][
                         -1, :, :
                     ]  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
                     before = (info_layer_score,)
-                    print("info_layer_score: ", info_layer_score)
-                    print("info_layer_score.shape: ", info_layer_score.shape)
 
                     # compute entropy of the info layer
                     info_layer_probs = F.softmax(
@@ -146,13 +143,9 @@ class ActivationDecoding(BaseModel):
                     ).unsqueeze(
                         0
                     )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [1, 250, 32000]
-                    print("info_layer_probs: ", info_layer_probs)
-                    print("info_layer_probs.shape: ", info_layer_probs.shape)
                     entropy = torch.distributions.Categorical(
                         probs=info_layer_probs, validate_args=False
                     ).entropy()  # [1,32000]
-                    print("entropy: ", entropy)
-                    print("entropy.shape: ", entropy.shape)
                 elif len(before) >= 1:
                     info_layer_score = before[
                         0
@@ -174,20 +167,12 @@ class ActivationDecoding(BaseModel):
                         logits = logits
 
                     adjust_score = -final_entropy
-
-                print("logits: ", logits)
-                print("logits.shape: ", logits.shape)
                 next_token_logits = logits.log_softmax(dim=-1)
-                print("next_token_logits: ", next_token_logits)
-                print("next_token_logits.shape: ", next_token_logits.shape)
 
                 entropies += [adjust_score[0][0].item()]
                 last_input_token = next_token_logits.argmax(dim=-1)
-                print("last_input_token: ", last_input_token)
                 generated_ids.append(last_input_token.item())
-                input_ids = torch.cat(
-                    [input_ids, last_input_token.unsqueeze(0)], dim=1
-                )
+                input_ids = torch.cat([input_ids, last_input_token.unsqueeze(0)], dim=1)
                 if last_input_token.item() == self.tokenizer.eos_token_id:
                     break
             decoded_text = self.tokenizer.decode(
