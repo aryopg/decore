@@ -87,8 +87,7 @@ class ActivationDecoding(BaseModel):
                     output_attentions=False,
                     output_hidden_states=False,
                     early_exit_layers=self.candidate_premature_layers
-                    + [self.mature_layer],
-                    info_layer=self.info_layer,
+                    + [self.info_layer, self.mature_layer],
                 )
 
                 final_logits = dict_outputs[self.mature_layer][:, -1, :]
@@ -180,8 +179,7 @@ class ActivationDecoding(BaseModel):
                     output_attentions=False,
                     output_hidden_states=False,
                     early_exit_layers=self.candidate_premature_layers
-                    + [self.mature_layer],
-                    info_layer=self.info_layer,
+                    + [self.info_layer, self.mature_layer],
                 )
                 final_logits = dict_outputs[self.mature_layer][
                     0, prefix_ids.shape[-1] - 1 : -1
