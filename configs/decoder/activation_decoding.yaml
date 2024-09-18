@@ -10,3 +10,4 @@ configs:
   decoding_strategy: entropy
   decoding_mode: activation
   info_layer: 24
+  relative_top: 0.1

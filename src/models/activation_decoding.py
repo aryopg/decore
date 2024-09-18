@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 from torch.nn import functional as F
 
@@ -44,12 +45,30 @@ class ActivationDecoding(BaseModel):
         self.decoding_strategy = self.decoder_configs.configs.decoding_strategy
         self.decoding_mode = self.decoder_configs.configs.decoding_mode
         self.info_layer = self.decoder_configs.configs.info_layer
+        self.relative_top = self.decoder_configs.configs.relative_top
 
     def _calculate_entropy(self, logits):
         probs = torch.softmax(logits, dim=-1)
         entropy = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
 
         return entropy
+
+    def relative_top_filter(
+        self,
+        scores: torch.FloatTensor,
+        relative_top: float = 0.1,
+        filter_value: float = -float("Inf"),
+        min_tokens_to_keep: int = 1,
+    ) -> torch.FloatTensor:
+        scores_normalized = scores.log_softmax(dim=-1)
+        sorted_logits, sorted_indices = torch.sort(scores_normalized, descending=True)
+        min_thresh = sorted_logits[..., min_tokens_to_keep - 1]
+        probs_max = torch.max(scores_normalized, dim=-1).values
+        probs_thresh = probs_max + np.log(relative_top)
+        probs_thresh = torch.min(min_thresh, probs_thresh)
+        probs_thresh = probs_thresh.unsqueeze(-1)
+        scores_normalized[scores_normalized < probs_thresh] = filter_value
+        return scores_normalized
 
     def generate(
         self,
@@ -92,6 +111,12 @@ class ActivationDecoding(BaseModel):
                 )
 
                 final_logits = dict_outputs[self.mature_layer][:, -1, :]
+
+                if self.relative_top > 0.0:
+                    final_logits = self.relative_top_filter(final_logits, relative_top)
+                    mask = final_logits[0] < -1e3
+                    index_nontop = torch.argwhere(mask).squeeze()
+
                 logits = final_logits
                 if len(before) == 0:  # the token is the first generated token
                     info_layer_score = dict_outputs[self.info_layer][
@@ -120,12 +145,15 @@ class ActivationDecoding(BaseModel):
                     self.decoding_strategy == "entropy"
                     or self.decoding_mode == "activation_dola"
                 ):
+                    final_entropy = entropy.scatter(
+                        1, index_nontop.unsqueeze(0), float("Inf")
+                    )
                     if self.alpha != 0:
-                        logits = logits + self.alpha * (-entropy)
+                        logits = logits + self.alpha * (-final_entropy)
                     else:
                         logits = logits
 
-                    adjust_score = -entropy
+                    adjust_score = -final_entropy
 
                 entropies += [adjust_score[0][0].item()]
                 past_kv = outputs.past_key_values
