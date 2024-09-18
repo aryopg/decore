@@ -174,11 +174,16 @@ class ActivationDecoding(BaseModel):
 
                     adjust_score = -final_entropy
 
+                print(logits)
+                print(logits.shape)
                 next_token_logits = logits[0, -1].log_softmax(dim=-1)
+                print(next_token_logits)
+                print(next_token_logits.shape)
 
                 entropies += [adjust_score[0][0].item()]
                 past_kv = outputs.past_key_values
                 last_input_token = next_token_logits.argmax(dim=-1)
+                print(last_input_token)
                 generated_ids.append(last_input_token.item())
                 if last_input_token.item() == self.tokenizer.eos_token_id:
                     break
