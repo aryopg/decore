@@ -128,16 +128,8 @@ class ActivationDecoding(BaseModel):
                     print("info_layer_score: ", info_layer_score)
                     print("info_layer_score.shape: ", info_layer_score.shape)
 
-                    # compute entropy of the info layer
-                    info_layer_probs = F.softmax(
-                        torch.t(info_layer_score), dim=1
-                    ).unsqueeze(
-                        0
-                    )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [1, 250, 32000]
-                    print("info_layer_probs: ", info_layer_probs)
-                    print("info_layer_probs.shape: ", info_layer_probs.shape)
                     entropy = torch.distributions.Categorical(
-                        probs=info_layer_probs, validate_args=False
+                        logits=info_layer_score, validate_args=False
                     ).entropy()  # [1,32000]
                     print("entropy: ", entropy)
                     print("entropy.shape: ", entropy.shape)
@@ -231,13 +223,8 @@ class ActivationDecoding(BaseModel):
                 if self.decoding_strategy == "entropy":
                     info_layer_score = dict_outputs[self.info_layer][-1, :, :]
                     index_nontop = torch.argwhere(mask).squeeze()
-                    info_layer_probs = F.softmax(
-                        torch.t(info_layer_score), dim=1
-                    ).unsqueeze(
-                        0
-                    )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [250, 32000]
                     entropy = torch.distributions.Categorical(
-                        probs=info_layer_probs, validate_args=False
+                        logits=info_layer_score, validate_args=False
                     ).entropy()
 
                     entropy = entropy.scatter(
@@ -252,13 +239,8 @@ class ActivationDecoding(BaseModel):
                     info_layer_score = dict_outputs[self.info_layer][-1, :, :]
 
                     index_nontop = torch.argwhere(mask).squeeze()
-                    info_layer_probs = F.softmax(
-                        torch.t(info_layer_score), dim=1
-                    ).unsqueeze(
-                        0
-                    )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [250, 32000]
                     entropy = torch.distributions.Categorical(
-                        probs=info_layer_probs, validate_args=False
+                        logits=info_layer_score, validate_args=False
                     ).entropy()
                     # entropy = entropy.scatter(1, index_nontop.unsqueeze(0), float("Inf"))
                     final_logits = entropy
@@ -356,13 +338,8 @@ class ActivationDecoding(BaseModel):
                 info_layer_score = dict_outputs[self.info_layer][-1, :, :]
                 mask = final_logits[0] < -1e3
                 index_nontop = torch.argwhere(mask).squeeze()
-                info_layer_probs = F.softmax(
-                    torch.t(info_layer_score), dim=1
-                ).unsqueeze(
-                    0
-                )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [250, 32000]
                 entropy = torch.distributions.Categorical(
-                    probs=info_layer_probs, validate_args=False
+                    logits=info_layer_score, validate_args=False
                 ).entropy()
 
                 entropy = entropy.scatter(1, index_nontop.unsqueeze(0), float("Inf"))
