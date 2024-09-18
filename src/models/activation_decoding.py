@@ -4,6 +4,7 @@ import torch
 from torch.nn import functional as F
 
 from src.configs import DecoderConfigs, ModelConfigs
+from src.models.base_model import BaseModel
 
 # Transformers submodule taken from https://github.com/hkust-nlp/Activation_Decoding
 from transformers import AutoTokenizer
@@ -14,30 +15,13 @@ from transformers_ad.src.transformers import (
 )
 
 
-class ActivationDecoding:
+class ActivationDecoding(BaseModel):
     def __init__(
         self,
         model_configs: ModelConfigs,
         decoder_configs: DecoderConfigs,
     ):
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_configs.configs.model_name_or_path,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
-        ).eval()
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_configs.configs.model_name_or_path
-        )
-
-        if self.tokenizer.pad_token_id is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-
-        self.max_seq_len = model_configs.configs.max_seq_len
-        self.max_new_tokens = model_configs.configs.max_new_tokens
-
-        self.model_configs = model_configs
-        self.decoder_configs = decoder_configs
+        super().__init__(model_configs, decoder_configs)
 
         self.dola_layers = self.decoder_configs.configs.dola_layers
         self.alpha = self.decoder_configs.configs.alpha
@@ -62,99 +46,6 @@ class ActivationDecoding:
         self.decoding_mode = self.decoder_configs.configs.decoding_mode
         self.info_layer = self.decoder_configs.configs.info_layer
 
-    def _verbalise_input(
-        self,
-        inputs: Union[list, str],
-        tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast, None] = None,
-        use_system_prompt: bool = True,
-        add_generation_prompt: bool = True,
-        use_chat_template: bool = True,
-    ) -> torch.Tensor:
-        if tokenizer is None:
-            tokenizer = self.tokenizer
-
-        if self.model_configs.model_type == "instruct":
-            if use_chat_template:
-                chat_inputs = []
-                if type(inputs) == list:
-                    if "mistral" in self.model_configs.name.lower():
-                        if use_system_prompt:
-                            system_prompt = inputs[0]
-                            if type(system_prompt) in [tuple, list]:
-                                system_prompt = system_prompt[0]
-                            system_prompt = system_prompt + "\n"
-                            inputs = inputs[1:]
-                        else:
-                            system_prompt = ""
-                    for idx, input in enumerate(inputs):
-                        if type(input) in [tuple, list]:
-                            input = input[0]
-                        # Mistral can't handle system prompt
-                        if (
-                            use_system_prompt
-                            and "mistral" not in self.model_configs.name.lower()
-                        ):
-                            if idx == 0:
-                                chat_inputs += [{"role": "system", "content": input}]
-                            else:
-                                if idx % 2 != 0:
-                                    chat_inputs += [{"role": "user", "content": input}]
-                                else:
-                                    chat_inputs += [
-                                        {"role": "assistant", "content": input}
-                                    ]
-                        else:
-                            # Mistral can't handle system prompt
-                            if "mistral" in self.model_configs.name.lower():
-                                if idx % 2 == 0:
-                                    chat_inputs += [
-                                        {
-                                            "role": "user",
-                                            "content": system_prompt + input,
-                                        }
-                                    ]
-                                else:
-                                    chat_inputs += [
-                                        {"role": "assistant", "content": input}
-                                    ]
-                            else:
-                                if idx % 2 == 0:
-                                    chat_inputs += [{"role": "user", "content": input}]
-                                else:
-                                    chat_inputs += [
-                                        {"role": "assistant", "content": input}
-                                    ]
-                else:
-                    if type(inputs) in [tuple, list]:
-                        inputs = inputs[0]
-                    chat_inputs += [{"role": "user", "content": inputs}]
-                inputs = tokenizer.apply_chat_template(
-                    chat_inputs,
-                    add_generation_prompt=add_generation_prompt,
-                    return_tensors="pt",
-                    max_length=self.max_seq_len,
-                )
-            else:
-                if type(inputs) in [tuple, list]:
-                    inputs = inputs[0]
-                inputs = tokenizer(
-                    inputs, return_tensors="pt", max_length=self.max_seq_len
-                ).input_ids
-
-        elif self.model_configs.model_type == "base":
-            inputs = tokenizer(
-                inputs,
-                return_tensors="pt",
-                max_length=self.max_seq_len,
-            ).input_ids
-        else:
-            raise ValueError(
-                f"Unknown model type: {self.model_configs.model_type}. "
-                "Terminate tokenisation process."
-            )
-
-        return inputs
-
     def _calculate_entropy(self, logits):
         probs = torch.softmax(logits, dim=-1)
         entropy = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
@@ -169,49 +60,91 @@ class ActivationDecoding:
         self.model.eval()
 
         prompt = inputs["prompted_question"][0]
-        tokenised_inputs = self._verbalise_input(prompt).to(self.model.device)
 
+        if len(inputs["verbalised_instruction"][0]):
+            use_system_prompt = True
+        else:
+            use_system_prompt = False
+
+        tokenised_inputs = self._verbalise_input(
+            prompt, use_system_prompt=use_system_prompt
+        ).to(self.model.device)
+
+        # Predict
         with torch.inference_mode():
-            if self.decoding_mode == "activation":
-                outputs = self.model.generate(
-                    tokenised_inputs,
-                    max_new_tokens=self.max_new_tokens,
-                    num_return_sequences=1,
-                    output_hidden_states=True,
-                    output_scores=True,
-                    return_dict_in_generate=True,
-                    activation_decoding=True,
-                    do_sample=False,
-                    mature_layer=self.mature_layer,
-                    premature_layer=None,
-                    candidate_premature_layers=self.candidate_premature_layers,
-                    return_adjust_scores=False,
-                )
-            elif self.decoding_mode == "activation_dola":
-                outputs = self.model.generate(
-                    tokenised_inputs,
-                    max_new_tokens=self.max_new_tokens,
-                    num_return_sequences=1,
-                    output_hidden_states=True,
-                    output_scores=True,
-                    return_dict_in_generate=True,
-                    activation_dola_decoding=True,
-                    do_sample=False,
-                    mature_layer=self.mature_layer,
-                    premature_layer=None,
-                    candidate_premature_layers=self.candidate_premature_layers,
-                    return_adjust_scores=False,
-                )
-            decoded_text = self.tokenizer.decode(
-                outputs.sequences[0, tokenised_inputs.size(1) :],
-                skip_special_tokens=True,
+            input_logits = self.model(
+                input_ids=tokenised_inputs[:, :-1], use_cache=True, return_dict=True
             )
-        logits = torch.stack(outputs.logits, dim=1)
+            generated_ids = []
+            entropies = []
+            last_input_token = tokenised_inputs[:, -1]
+            past_kv = input_logits.past_key_values
+            for _ in range(self.max_new_tokens):
+                last_input_token = last_input_token.view(1, 1)
+                dict_outputs, outputs = self.model(
+                    input_ids=tokenised_inputs,
+                    past_key_values=past_kv,
+                    return_dict=True,
+                    output_attentions=False,
+                    output_hidden_states=False,
+                    early_exit_layers=self.candidate_premature_layers
+                    + [self.mature_layer],
+                    info_layer=self.info_layer,
+                )
 
-        entropies = self._calculate_entropy(logits)
-        entropies = entropies.cpu().numpy().tolist()
+                final_logits = dict_outputs[self.mature_layer][:, -1, :]
+                logits = final_logits
+                if len(before) == 0:  # the token is the first generated token
+                    info_layer_score = dict_outputs[self.info_layer][
+                        -1, :, :
+                    ]  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
+                    before = (info_layer_score,)
 
-        return {"decoded_text": decoded_text, "alphas": entropies, "attentions": {}}
+                    # compute entropy of the info layer
+                    info_layer_probs = F.softmax(
+                        torch.t(info_layer_score), dim=1
+                    ).unsqueeze(
+                        0
+                    )  # info_layer_score: [num_token_in_question, len_token_lib] -> e.g. [1, 250, 32000]
+                    entropy = torch.distributions.Categorical(
+                        probs=info_layer_probs, validate_args=False
+                    ).entropy()  # [1,32000]
+                elif len(before) >= 1:
+                    info_layer_score = before[
+                        0
+                    ]  # [num_token_in_question, len_token_lib] -> e.g. [62, 32000]
+
+                # we compute the adjust_score to calibrate the original score
+                adjust_score = None
+
+                if (
+                    self.decoding_strategy == "entropy"
+                    or self.decoding_mode == "activation_dola"
+                ):
+                    if self.alpha != 0:
+                        logits = logits + self.alpha * (-entropy)
+                    else:
+                        logits = logits
+
+                    adjust_score = -entropy
+
+                entropies += [adjust_score]
+                past_kv = outputs.past_key_values
+                last_input_token = logits[0, -1].argmax()
+                generated_ids.append(last_input_token.item())
+                if last_input_token.item() == self.tokenizer.eos_token_id:
+                    break
+            decoded_text = self.tokenizer.decode(
+                generated_ids, skip_special_tokens=True
+            )
+
+        generation_output = {
+            "decoded_text": decoded_text,
+            "alphas": entropies,
+            "attentions": {},
+        }
+
+        return generation_output
 
     def lm_score(
         self,
