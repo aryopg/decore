@@ -34,7 +34,10 @@ class IFEval(BaseDataset):
                 "idx": ds[i]["key"],
                 "prompt": ds[i]["prompt"],
                 "instruction_id_list": ds[i]["instruction_id_list"],
-                "kwargs": ds[i]["kwargs"],
+                "kwargs": [
+                    {k: v for k, v in kwargs_.items() if v}
+                    for kwargs_ in ds[i]["kwargs"]
+                ],
             }
             for key, value in sample.items():
                 if value is None:
