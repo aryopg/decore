@@ -18,7 +18,14 @@ class IFEval:
         for prediction in predictions:
             doc = {
                 "key": prediction["idx"],
-                "instruction_id_list": prediction["instruction_id_list"],
+                "instruction_id_list": [
+                    (
+                        instruction_id[0]
+                        if type(instruction_id) in [list, tuple]
+                        else instruction_id
+                    )
+                    for instruction_id in prediction["instruction_id_list"]
+                ],
                 "prompt": prediction["prompt"],
                 "kwargs": prediction["kwargs"],
             }
