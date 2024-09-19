@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: qwen2_7b_instruct
+  - override /data: ifeval
+  - override /decoder: decore_entropy
+
+model:
+  configs:
+    max_new_tokens: 1280

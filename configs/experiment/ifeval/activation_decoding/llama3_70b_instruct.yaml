@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: llama3_70b_instruct
+  - override /data: ifeval
+  - override /decoder: activation_decoding
+
+model:
+  configs:
+    max_new_tokens: 1280

@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: llama3_8b_instruct
+  - override /data: ifeval
+  - override /decoder: decore_random_entropy
+
+model:
+  configs:
+    max_new_tokens: 1280
