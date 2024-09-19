@@ -43,7 +43,6 @@ class IFEval(BaseDataset):
 
         if self.num_samples > 0:
             data = data[: self.num_samples]
-            print(data)
 
         return data
 
