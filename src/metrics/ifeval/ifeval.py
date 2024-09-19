@@ -27,7 +27,13 @@ class IFEval:
                     for instruction_id in prediction["instruction_id_list"]
                 ],
                 "prompt": prediction["prompt"],
-                "kwargs": prediction["kwargs"],
+                "kwargs": [
+                    {
+                        k: v[0] if type(v) in [list, tuple] else v
+                        for k, v in kwargs_.items()
+                    }
+                    for kwargs_ in prediction["kwargs"]
+                ],
             }
             metric = process_results(doc, prediction["predicted_answer"])
 
