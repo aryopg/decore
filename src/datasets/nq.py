@@ -166,6 +166,9 @@ class NQ(BaseDataset):
                 + icl_demo
                 + [f"{prompted_contexts}{verbalised_question}{answer_prefix}"]
             ]
+            prompted_question_wo_context = [
+                instruction + icl_demo + [f"{verbalised_question}{answer_prefix}"]
+            ]
         else:
             instruction = instruction[0]
             icl_demo = "\n\n".join(icl_demo)
@@ -176,6 +179,13 @@ class NQ(BaseDataset):
                 + "\n\n"
                 + (f"{prompted_contexts}{verbalised_question}{answer_prefix}")
             )
+            prompted_question_wo_context = (
+                instruction
+                + "\n\n"
+                + icl_demo
+                + "\n\n"
+                + (f"{verbalised_question}{answer_prefix}")
+            )
         return {
             "verbalised_instruction": instruction,
             "verbalised_icl_demo": icl_demo,
@@ -183,6 +193,7 @@ class NQ(BaseDataset):
             "verbalised_question": verbalised_question,
             "verbalised_answer_prefix": answer_prefix,
             "prompted_question": input_text_prompt,
+            "prompted_question_wo_context": prompted_question_wo_context,
         }
 
     def __getitem__(self, idx):
@@ -198,6 +209,7 @@ class NQ(BaseDataset):
         sample["verbalised_answer_prefix"] = prompt["verbalised_answer_prefix"]
 
         sample["prompted_question"] = prompt["prompted_question"]
+        sample["prompted_question_wo_context"] = prompt["prompted_question_wo_context"]
 
         return sample
 

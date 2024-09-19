@@ -117,6 +117,7 @@ class TruthfulQA(BaseDataset):
             "verbalised_question": verbalised_question,
             "verbalised_answer_prefix": answer_prefix,
             "prompted_question": input_text_prompt,
+            "prompted_question_wo_context": "",
         }
 
     def build_answer(self, answer) -> str:
@@ -163,6 +164,7 @@ class TruthfulQA(BaseDataset):
         sample["verbalised_answer_prefix"] = prompt["verbalised_answer_prefix"]
 
         sample["prompted_question"] = prompt["prompted_question"]
+        sample["prompted_question_wo_context"] = prompt["prompted_question_wo_context"]
 
         sample["ref_best"] = self.format_best(sample["answer_best"])
 

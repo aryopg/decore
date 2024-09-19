@@ -95,11 +95,13 @@ class NQSwap(BaseDataset):
         answer_prefix = "Answer:"
 
         if self.kwargs["use_chat_template"]:
-
             input_text_prompt = [
                 instruction
                 + icl_demo
                 + [f"{prompted_contexts}{verbalised_question}{answer_prefix}"]
+            ]
+            prompted_question_wo_context = [
+                instruction + icl_demo + [f"{verbalised_question}{answer_prefix}"]
             ]
         else:
             instruction = instruction[0]
@@ -110,6 +112,9 @@ class NQSwap(BaseDataset):
                 + icl_demo
                 + f"{prompted_contexts}{verbalised_question}{answer_prefix}"
             )
+            prompted_question_wo_context = (
+                instruction + icl_demo + f"{verbalised_question}{answer_prefix}"
+            )
         return {
             "verbalised_instruction": instruction,
             "verbalised_icl_demo": icl_demo,
@@ -117,6 +122,7 @@ class NQSwap(BaseDataset):
             "verbalised_question": verbalised_question,
             "verbalised_answer_prefix": answer_prefix,
             "prompted_question": input_text_prompt,
+            "prompted_question_wo_context": prompted_question_wo_context,
         }
 
     def __getitem__(self, idx):
@@ -132,6 +138,7 @@ class NQSwap(BaseDataset):
         sample["verbalised_answer_prefix"] = prompt["verbalised_answer_prefix"]
 
         sample["prompted_question"] = prompt["prompted_question"]
+        sample["prompted_question_wo_context"] = prompt["prompted_question_wo_context"]
 
         return sample
 
