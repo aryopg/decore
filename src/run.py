@@ -129,9 +129,8 @@ class Run:
             if self.configs.data.name == "IFEval":
                 batch["kwargs"] = [
                     {
-                        k: int(v.cpu().numpy()[0])
+                        k: int(v.cpu().numpy()[0]) if type(v) == torch.Tensor else v
                         for k, v in kwargs_.items()
-                        if type(v) == torch.Tensor
                     }
                     for kwargs_ in batch["kwargs"]
                 ]
