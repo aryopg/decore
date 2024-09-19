@@ -110,7 +110,7 @@ def test_instruction_following_loose(
 
 def process_results(doc, results):
     inp = InputExample(
-        key=doc["key"],
+        key=doc["idx"],
         instruction_id_list=doc["instruction_id_list"],
         prompt=doc["prompt"],
         kwargs=doc["kwargs"],
