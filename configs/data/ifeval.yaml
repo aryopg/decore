@@ -1,0 +1,7 @@
+defaults:
+  - base_data_config
+
+name: IFEval
+data_dir: data/IFEval/train
+num_samples: -1
+variation: null

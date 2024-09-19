@@ -125,6 +125,17 @@ class Run:
                 except:
                     batch[key] = str(batch[key][0])
 
+            # Brute force normalisation for IFEval, some values were casted as tensors by collator
+            if self.configs.data.name == "IFEval":
+                batch["kwargs"] = [
+                    {
+                        k: int(v.cpu().numpy()[0])
+                        for k, v in kwargs_.items()
+                        if type(v) == torch.Tensor
+                    }
+                    for kwargs_ in batch["kwargs"]
+                ]
+
             # Save the predictions to a JSONL file after each batch
             with open(prediction_filepath, "a") as f:
                 f.write(json.dumps(batch) + "\n")
