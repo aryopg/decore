@@ -3,7 +3,7 @@ from typing import Dict, List
 import regex as re
 import numpy as np
 
-from src.metrics.ifeval.utils import process_results
+from src.metrics.ifeval.utils import process_results, agg_inst_level_acc
 
 
 class IFEval:
@@ -36,15 +36,10 @@ class IFEval:
             prompt_level_loose_accs.append(metric["prompt_level_loose_acc"])
             inst_level_loose_accs.append(metric["inst_level_loose_acc"])
 
-        print("prompt_level_strict_accs: ", prompt_level_strict_accs)
-        print("inst_level_strict_accs: ", inst_level_strict_accs)
-        print("prompt_level_loose_accs: ", prompt_level_loose_accs)
-        print("inst_level_loose_accs: ", inst_level_loose_accs)
-
         metrics = {
             "prompt_level_strict_acc": np.mean(prompt_level_strict_accs),
-            "inst_level_strict_acc": np.mean(inst_level_strict_accs),
+            "inst_level_strict_acc": agg_inst_level_acc(inst_level_strict_accs),
             "prompt_level_loose_acc": np.mean(prompt_level_loose_accs),
-            "inst_level_loose_acc": np.mean(inst_level_loose_accs),
+            "inst_level_loose_acc": agg_inst_level_acc(inst_level_loose_accs),
         }
         return metrics
