@@ -17,7 +17,7 @@ class IFEval:
         inst_level_loose_accs = []
         for prediction in predictions:
             doc = {
-                "key": prediction["key"],
+                "key": prediction["idx"],
                 "instruction_id_list": prediction["instruction_id_list"],
                 "prompt": prediction["prompt"],
                 "kwargs": prediction["kwargs"],
