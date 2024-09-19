@@ -36,6 +36,11 @@ class IFEval:
             prompt_level_loose_accs.append(metric["prompt_level_loose_acc"])
             inst_level_loose_accs.append(metric["inst_level_loose_acc"])
 
+        print("prompt_level_strict_accs: ", prompt_level_strict_accs)
+        print("inst_level_strict_accs: ", inst_level_strict_accs)
+        print("prompt_level_loose_accs: ", prompt_level_loose_accs)
+        print("inst_level_loose_accs: ", inst_level_loose_accs)
+
         metrics = {
             "prompt_level_strict_acc": np.mean(prompt_level_strict_accs),
             "inst_level_strict_acc": np.mean(inst_level_strict_accs),
