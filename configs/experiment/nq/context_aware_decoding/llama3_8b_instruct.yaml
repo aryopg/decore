@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: llama3_8b_instruct
+  - override /data: nq
+  - override /decoder: context_aware_decoding

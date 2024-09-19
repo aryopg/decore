@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: llama3_70b
+  - override /data: xsum
+  - override /decoder: context_aware_decoding
+
+model:
+  configs:
+    max_new_tokens: 128
