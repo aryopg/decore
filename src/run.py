@@ -143,7 +143,6 @@ class Run:
                 batch["attentions"] = prediction["attentions"]
                 attentions_list += [batch]
 
-        print(predictions)
         # Evaluate
         metrics = self.metrics(predictions)
 
