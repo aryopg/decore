@@ -126,6 +126,7 @@ class Run:
                     batch[key] = str(batch[key][0])
 
             # Save the predictions to a JSONL file after each batch
+            print(batch)
             with open(prediction_filepath, "a") as f:
                 f.write(json.dumps(batch) + "\n")
 
