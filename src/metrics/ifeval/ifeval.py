@@ -31,10 +31,10 @@ class IFEval:
             }
             metric = process_results(doc, prediction["predicted_answer"])
 
-            prompt_level_strict_accs.append(metric["prompt_level_strict_accs"])
-            inst_level_strict_accs.append(metric["inst_level_strict_accs"])
-            prompt_level_loose_accs.append(metric["prompt_level_loose_accs"])
-            inst_level_loose_accs.append(metric["inst_level_loose_accs"])
+            prompt_level_strict_accs.append(metric["prompt_level_strict_acc"])
+            inst_level_strict_accs.append(metric["inst_level_strict_acc"])
+            prompt_level_loose_accs.append(metric["prompt_level_loose_acc"])
+            inst_level_loose_accs.append(metric["inst_level_loose_acc"])
 
         metrics = {
             "prompt_level_strict_acc": np.mean(prompt_level_strict_accs),
