@@ -111,6 +111,16 @@ class Run:
             if self.configs.data.name == "MemoTrap":
                 batch["answer_index"] = int(batch["answer_index"].cpu().numpy()[0])
 
+            # Brute force normalisation for IFEval, some values were casted as tensors by collator
+            if self.configs.data.name == "IFEval":
+                batch["kwargs"] = [
+                    {
+                        k: int(v.cpu().numpy()[0]) if type(v) == torch.Tensor else v
+                        for k, v in kwargs_.items()
+                    }
+                    for kwargs_ in batch["kwargs"]
+                ]
+
             predictions.append(batch)
 
             values_to_normalised = ["idx"]
@@ -124,16 +134,6 @@ class Run:
                     batch[key] = int(batch[key].cpu().numpy()[0])
                 except:
                     batch[key] = str(batch[key][0])
-
-            # Brute force normalisation for IFEval, some values were casted as tensors by collator
-            if self.configs.data.name == "IFEval":
-                batch["kwargs"] = [
-                    {
-                        k: int(v.cpu().numpy()[0]) if type(v) == torch.Tensor else v
-                        for k, v in kwargs_.items()
-                    }
-                    for kwargs_ in batch["kwargs"]
-                ]
 
             # Save the predictions to a JSONL file after each batch
             with open(prediction_filepath, "a") as f:

@@ -49,3 +49,21 @@ class IFEval:
             "inst_level_loose_acc": agg_inst_level_acc(inst_level_loose_accs),
         }
         return metrics
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--predictions_filepath", type=str)
+    args = parser.parse_args()
+
+    print(f"Reading predictions: {args.predictions_filepath}")
+
+    with open(args.predictions_filepath, "r") as f:
+        predictions = [json.loads(line) for line in f]
+
+    metric = IFEval()
+    metrics = metric(predictions)
+    print(metrics)
