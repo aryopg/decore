@@ -11,7 +11,7 @@ hydra:
   output_subdir: null
 random_seed: 1234
 
-wandb_project: AstraZeneca_DeCoRe
-wandb_entity: aryopg
+wandb_project: DeCoRe
+wandb_entity: anonymous
 
 debug: false
