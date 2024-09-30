@@ -1,6 +1,6 @@
 # DeCoRe: Decoding by Contrasting Retrieval Heads to Mitigate Hallucination
 
-![Overview of the DeCoRe workflow](docs/assets/DeCoRe_arch.png "DeCoRe")
+![Overview of the DeCoRe workflow](docs/assets/DeCoRe_overview.png "DeCoRe")
 
 Paper: TBA
 Authors: Anonymous
