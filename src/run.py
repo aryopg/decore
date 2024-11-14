@@ -168,4 +168,5 @@ class Run:
                 with record_function("model_inference"):
                     flop = self.model.generate(batch)
                     flops.append(flop)
-        print(f"FLOPS: {np.mean(flops)} +/- {np.std(flops)}")
+
+        print(flops)
