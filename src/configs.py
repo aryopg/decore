@@ -43,6 +43,7 @@ class RunnerConfigs:
     model: ModelConfigs = MISSING
     wandb_project: str = MISSING
     wandb_entity: str = MISSING
+    count_flops: bool = False
     debug: bool = False
     random_seed: int = 1234
 
