@@ -149,3 +149,23 @@ class Run:
             wandb.log_artifact(pred_artifact)
         else:
             print(metrics)
+
+    def count_flops(self):
+        """
+        Test the model on a random dataset and log the FLOPS
+        """
+        import numpy as np
+        from torch.profiler import ProfilerActivity, profile, record_function
+
+        flops = []
+        for step, batch in enumerate(tqdm(self.dataloaders)):
+            # Predict
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                record_shapes=True,
+                with_stack=True,
+            ) as prof:
+                with record_function("model_inference"):
+                    flop = self.model.generate(batch)
+                    flops.append(flop)
+        print(f"FLOPS: {np.mean(flops)} +/- {np.std(flops)}")
