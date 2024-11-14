@@ -164,9 +164,16 @@ class Run:
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                 record_shapes=True,
                 with_stack=True,
+                with_flops=True,
             ) as prof:
                 with record_function("model_inference"):
-                    flop = self.model.generate(batch)
-                    flops.append(flop)
+                    pred = self.model.generate(batch)
+            break
+        print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
 
-        print(flops)
+        total_flops = sum([item.flops for item in prof.key_averages()])
+
+        # Convert to TFLOPs for reporting
+        total_tflops = total_flops / 1e12
+        print(f"Total FLOPs: {total_flops:.2e} FLOPs")
+        print(f"Total TFLOPs: {total_tflops:.2f} TFLOPs")
