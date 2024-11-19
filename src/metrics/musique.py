@@ -1,7 +1,7 @@
 from typing import Dict, List
 
-import regex as re
 import numpy as np
+import regex as re
 
 
 class MuSiQue:
@@ -54,6 +54,7 @@ class MuSiQue:
             subspan_em_scores += [scores["Subspan_EM"]]
 
         metrics = {
+            "Subspan_EM_scores": subspan_em_scores,
             "Subspan_EM": np.mean(subspan_em_scores),
         }
         return metrics

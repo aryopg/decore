@@ -38,14 +38,20 @@ def perform_mcnemars_test(model_a_results, model_b_results):
     # Perform McNemar's Test
     result = mcnemar(table, exact=False, correction=True)
 
-    print(f"McNemar's Test Statistic: {result.statistic:.4f}")
-    print(f"P-value: {result.pvalue:.4f}")
-
-    # Interpret the result
-    if result.pvalue <= 0.05:
-        print("The difference in performance is statistically significant.")
+    if result.pvalue < 0.0001:
+        significance_text = "^{\\ast\\ast\\ast\\ast}"
+    elif result.pvalue < 0.001:
+        significance_text = "^{\\ast\\ast\\ast}"
+    elif result.pvalue < 0.01:
+        significance_text = "^{\\ast\\ast}"
+    elif result.pvalue < 0.05:
+        significance_text = "^{\\ast}"
     else:
-        print("The difference in performance is not statistically significant.")
+        significance_text = ""
+
+    print(f"Contingency Table: {table}")
+    print(f"McNemar's Test Statistic: {result.statistic:.2f}{significance_text}")
+    print(f"P-value: {result.pvalue:.4f}")
 
 
 def perform_bootstrap_test(model_a_scores, model_b_scores, n_bootstraps=10000):
@@ -58,7 +64,6 @@ def perform_bootstrap_test(model_a_scores, model_b_scores, n_bootstraps=10000):
 
     # Compute the observed mean difference
     observed_diff = np.mean(model_b_scores - model_a_scores)
-    print(f"Observed Mean Difference: {observed_diff:.4f}")
 
     # Compute per-instance differences
     score_differences = model_b_scores - model_a_scores
@@ -83,11 +88,18 @@ def perform_bootstrap_test(model_a_scores, model_b_scores, n_bootstraps=10000):
     ) / len(bootstrap_means)
     print(f"P-value: {p_value:.4f}")
 
-    # Interpret the result
-    if p_value <= 0.05:
-        print("The difference in performance is statistically significant.")
+    if p_value < 0.0001:
+        significance_text = "^{\\ast\\ast\\ast\\ast}"
+    elif p_value < 0.001:
+        significance_text = "^{\\ast\\ast\\ast}"
+    elif p_value < 0.01:
+        significance_text = "^{\\ast\\ast}"
+    elif p_value < 0.05:
+        significance_text = "^{\\ast}"
     else:
-        print("The difference in performance is not statistically significant.")
+        significance_text = ""
+
+    print(f"Observed Mean Difference: {-observed_diff:.2f}{significance_text}")
 
 
 def main():
@@ -130,6 +142,9 @@ def main():
     )
     args = parser.parse_args()
 
+    print(f"Model A Results: {args.model_a_results_filepath}")
+    print(f"Model B Results: {args.model_b_results_filepath}")
+
     # Load model results
     model_a_results = []
     with open(args.model_a_results_filepath, "r") as f:
@@ -146,15 +161,16 @@ def main():
     metrics_a = metric_obj(model_a_results)
     metrics_b = metric_obj(model_b_results)
 
-    print(f"Model A Metrics: {metrics_a}")
-    print(f"Model B Metrics: {metrics_b}")
-    exit()
+    # print(metrics_a)
 
-    # Example data (replace with your actual data)
-    if args.is_binary:
-        perform_mcnemars_test(metrics_a, metrics_b)
-    else:
-        perform_bootstrap_test(metrics_a, metrics_b)
+    metrics_keys = [m for m in list(metrics_a.keys()) if m.endswith("_scores")]
+
+    for metric_key in metrics_keys:
+        print(metric_key)
+        if not args.is_binary or "MC2" in metric_key or "MC3" in metric_key:
+            perform_bootstrap_test(metrics_a[metric_key], metrics_b[metric_key])
+        else:
+            perform_mcnemars_test(metrics_a[metric_key], metrics_b[metric_key])
 
 
 if __name__ == "__main__":

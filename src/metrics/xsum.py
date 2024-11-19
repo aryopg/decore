@@ -138,5 +138,7 @@ class XSum:
         metrics = {
             key: np.mean([res[key] for res in all_results]) for key in all_results[0]
         }
+        for key in all_results[0]:
+            metrics[key + "_scores"] = [res[key] for res in all_results]
 
         return metrics

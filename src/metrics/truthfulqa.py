@@ -71,6 +71,9 @@ class TruthfulQA:
             mc2_scores += [scores["MC2"]]
             mc3_scores += [scores["MC3"]]
         metrics = {
+            "MC1_scores": mc1_scores,
+            "MC2_scores": mc2_scores,
+            "MC3_scores": mc3_scores,
             "MC1": np.mean(mc1_scores),
             "MC2": np.mean(mc2_scores),
             "MC3": np.mean(mc3_scores),

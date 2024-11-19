@@ -1,7 +1,7 @@
 from typing import Dict, List
 
-import regex as re
 import numpy as np
+import regex as re
 
 from src.metrics.utils import best_em, best_subspan_em
 
@@ -48,6 +48,8 @@ class NQSwap:
             org_subspan_em_scores += [scores["org_Subspan_EM"]]
 
         metrics = {
+            "sub_Subspan_EM_scores": sub_subspan_em_scores,
+            "org_Subspan_EM_scores": org_subspan_em_scores,
             "sub_EM": np.mean(sub_em_scores),
             "sub_Subspan_EM": np.mean(sub_subspan_em_scores),
             "org_EM": np.mean(org_em_scores),

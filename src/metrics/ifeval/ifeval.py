@@ -47,6 +47,8 @@ class IFEval:
             "inst_level_strict_acc": agg_inst_level_acc(inst_level_strict_accs),
             "prompt_level_loose_acc": np.mean(prompt_level_loose_accs),
             "inst_level_loose_acc": agg_inst_level_acc(inst_level_loose_accs),
+            "prompt_level_strict_scores": prompt_level_strict_accs,
+            "prompt_level_loose_scores": prompt_level_loose_accs,
         }
         return metrics
 
