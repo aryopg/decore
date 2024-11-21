@@ -146,6 +146,7 @@ def main():
     print(f"Model B Results: {args.model_b_results_filepath}")
 
     # Load model results
+    print("Loading model results...")
     model_a_results = []
     with open(args.model_a_results_filepath, "r") as f:
         for line in f:
@@ -158,7 +159,10 @@ def main():
     # Initialise metrics class
     metric_obj = getattr(metrics, args.task_metrics)()
 
+    # Compute metrics
+    print("Computing metrics for model A...")
     metrics_a = metric_obj(model_a_results)
+    print("Computing metrics for model B...")
     metrics_b = metric_obj(model_b_results)
 
     # print(metrics_a)
