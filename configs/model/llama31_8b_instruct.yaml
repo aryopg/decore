@@ -1,0 +1,9 @@
+defaults:
+  - base_model_config
+
+name: LLaMA3.1-8b-Instruct
+model_type: instruct
+configs:
+  model_name_or_path: meta-llama/Llama-3.1-8B-Instruct
+  max_seq_len: 128000
+  max_new_tokens: 12
