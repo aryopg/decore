@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /model: llama32_3b_instruct
+  - override /data: nq
+  - override /decoder: baseline
