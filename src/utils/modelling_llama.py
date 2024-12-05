@@ -20,9 +20,8 @@
 """ PyTorch LLaMA model."""
 import math
 import warnings
-from typing import List, Optional, Tuple, Union, Any
-
-# from heterogeneous_memory import HeterogeneousMemory
+from dataclasses import dataclass
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -30,8 +29,6 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from dataclasses import dataclass
-
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.modeling_attn_mask_utils import (
@@ -41,11 +38,13 @@ from transformers.modeling_attn_mask_utils import (
     _prepare_4d_causal_attention_mask_for_sdpa,
 )
 from transformers.modeling_outputs import (
-    ModelOutput,
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
+    ModelOutput,
     SequenceClassifierOutputWithPast,
 )
+
+# from heterogeneous_memory import HeterogeneousMemory
 
 
 @dataclass
@@ -67,6 +66,7 @@ class CausalLMOutputWithHeterogeneousMemory(ModelOutput):
     inspect: Optional[Any] = None
 
 
+from transformers import LlamaConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.pytorch_utils import (
     ALL_LAYERNORM_LAYERS,
@@ -81,7 +81,6 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 from transformers.utils.import_utils import is_torch_fx_available
-from transformers import LlamaConfig
 
 if is_flash_attn_2_available():
     from flash_attn import flash_attn_func, flash_attn_varlen_func
@@ -417,7 +416,9 @@ class LlamaAttention(nn.Module):
                 base=self.rope_theta,
             )
         else:
-            scaling_type = self.config.rope_scaling["type"]
+            scaling_type = self.config.rope_scaling.get(
+                "type", self.config.rope_scaling.get("rope_type")
+            )
             scaling_factor = self.config.rope_scaling["factor"]
             if scaling_type == "linear":
                 self.rotary_emb = LlamaLinearScalingRotaryEmbedding(
