@@ -416,6 +416,7 @@ class LlamaAttention(nn.Module):
                 base=self.rope_theta,
             )
         else:
+            print(self.config.rope_scaling)
             scaling_type = self.config.rope_scaling.get(
                 "type", self.config.rope_scaling.get("rope_type")
             )
