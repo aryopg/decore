@@ -1,7 +1,7 @@
 from typing import Dict, List
 
-import regex as re
 import numpy as np
+import regex as re
 
 from src.metrics.utils import best_em, best_subspan_em
 
@@ -37,7 +37,7 @@ class NQSwap:
             ]
 
             # Only consider until \n, ., or ,
-            prediction = re.split("\n|\.|\,", sample["predicted_answer"])[0]
+            prediction = re.split("\n", sample["predicted_answer"])[0]
 
             scores = self.compute_metrics(prediction, sub_ref, org_ref)
 
